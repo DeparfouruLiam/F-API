@@ -21,11 +21,14 @@ def choose_current_account(iban):
 
 @router.get("/create_new_account")
 def create_new_account(iban):
+    if iban in [x.get_iban() for x in accounts]:
+        return {"Iban already in use"}
     new_account = add_account(iban)
-    CurrentUser["accounts"].append(new_account)
+    user = get_current_user()
+    user.get_accounts().append(new_account)
     return {"New account successfully created to": new_account}
 
 @router.get("/current_account")
 def get_my_account():
     current_account = get_current_account()
-    return {"Amount": current_account}
+    return {"Amount": current_account.get_iban()}
