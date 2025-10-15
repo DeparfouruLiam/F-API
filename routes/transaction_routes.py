@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from account import *
 
-router = APIRouter(prefix="/transaction", tags=["transaction"])
+router = APIRouter(prefix="/transaction", tags=["Transaction"])
 
 
 @router.get("/transfer")
@@ -16,4 +16,9 @@ def transfer_amount(senderiban,receiveriban,amount):
         return {"Sender doesn't have enough to transfer the amount"}
     sender.update({"amount": get_amount(sender) - int(amount)})
     receiver.update({"amount": get_amount(receiver) + int(amount)})
+
+    current_transaction: Transaction = {"ibanSender": senderiban, "ibanReceiver": receiveriban, "amount": amount}
+    sender["transactions"].append(current_transaction)
+    receiver["transactions"].append(current_transaction)
+
     return {"The transfer was successful. "+senderiban+" new amount": sender["amount"], receiveriban+" new amount": receiver["amount"]}
