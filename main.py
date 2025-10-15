@@ -2,46 +2,11 @@ from typing import TypedDict
 from fastapi import FastAPI, Depends
 app = FastAPI()
 
-class Transaction(TypedDict):
-    ibanSender: str
-    ibanReceiver: str
-    amount: int
-
-class Account(TypedDict):
-    amount: int
-    iban: str
-    transactions: list[Transaction]
-
-class Beneficiary(TypedDict):
-    username: str
-    iban: str
-
-class User(TypedDict):
-    username: str
-    password: str
-    accounts: list[Account]
-    mainAccount: Account
-    Beneficiaries: list[Beneficiary]
-
 #All transactions
-TransactionLG: Transaction = {"ibanSender": "Aled", "ibanReceiver": "Yiouiuh", "amount":20}
 
 #All beneficiaries
-GhaziBeneficiary: Beneficiary = {"username": "Ghazi","iban": "Yiouiuh"}
-
-#All accounts
-LiamAccount: Account = {"amount": 100, "iban": "Aled", "transactions": [TransactionLG]}
-GhaziAccount: Account = {"amount": 10, "iban": "Yiouiuh", "transactions": [TransactionLG]}
-AdamAccount: Account = {"amount": 50, "iban": "Buranyah", "transactions": []}
-
-#All users
-Liam: User = {"username": "Liam", "password": "furryfemboy", "accounts": [LiamAccount],"mainAccount":LiamAccount,"Beneficiaries": [GhaziBeneficiary]}
-Ghazi: User = {"username": "Ghazi", "password": "jadorelespieds", "accounts": [GhaziAccount],"mainAccount":GhaziAccount,"Beneficiaries": []}
-Adam: User = {"username": "Adam", "password":"futa", "accounts": [AdamAccount],"mainAccount": AdamAccount,"Beneficiaries": []}
 
 #Lists created
-users = [Liam, Adam, Ghazi]
-accounts = [LiamAccount, GhaziAccount, AdamAccount]
 
 # users = [{"username": "Liam", "password": "furryfemboy", "accounts": [],"mainAccount":None,"Beneficiaries": []},{"username": "Ghazi", "password": "jadorelespieds", "accounts": [],"mainAccount":None,"Beneficiaries": []},{"username": "Adam", "password":"futa", "accounts": [],"mainAccount": None,"Beneficiaries": []}]
 # accounts = [{"amount": 100, "iban": "Aled", "transactions": []},{"amount": 10, "iban": "Yiouiuh", "transactions": []},{"amount": 50, "iban": "Buranyah", "transactions": []}]
