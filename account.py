@@ -13,3 +13,12 @@ GhaziAccount: Account = {"amount": 10, "iban": "Yiouiuh", "transactions": [Trans
 AdamAccount: Account = {"amount": 50, "iban": "Buranyah", "transactions": []}
 
 accounts = [LiamAccount, GhaziAccount, AdamAccount]
+def get_amount(account):
+    return account["amount"]
+
+def get_accounts():
+    return accounts
+
+def account_from_iban(iban):
+    return next((x for x in get_accounts() if x["iban"] == iban), None)
+

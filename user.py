@@ -17,3 +17,12 @@ Adam: User = {"username": "Adam", "password":"futa", "accounts": [AdamAccount],"
 
 
 users = [Liam, Adam, Ghazi]
+
+
+def get_users():
+    return users
+
+
+def account_from_username(username):
+    account = next((x for x in get_users() if x["username"] == username), None)["mainAccount"]
+    return account_from_iban(account["iban"])
