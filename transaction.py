@@ -5,4 +5,5 @@ class Transaction(TypedDict):
     ibanReceiver: str
     amount: int
 
+#All transactions
 TransactionLG: Transaction = {"ibanSender": "Aled", "ibanReceiver": "Yiouiuh", "amount":20}
