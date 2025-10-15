@@ -9,11 +9,12 @@ class User(TypedDict):
     mainAccount: Account
     Beneficiaries: list[Beneficiary]
 
-
 #All users
 Liam: User = {"username": "Liam", "password": "furryfemboy", "accounts": [LiamAccount],"mainAccount":LiamAccount,"Beneficiaries": [GhaziBeneficiary]}
 Ghazi: User = {"username": "Ghazi", "password": "jadorelespieds", "accounts": [GhaziAccount],"mainAccount":GhaziAccount,"Beneficiaries": []}
 Adam: User = {"username": "Adam", "password":"futa", "accounts": [AdamAccount],"mainAccount": AdamAccount,"Beneficiaries": []}
+
+CurrentUser: User = Liam
 
 
 users = [Liam, Adam, Ghazi]

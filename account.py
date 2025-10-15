@@ -12,6 +12,8 @@ LiamAccount: Account = {"amount": 100, "iban": "Aled", "transactions": [Transact
 GhaziAccount: Account = {"amount": 10, "iban": "Yiouiuh", "transactions": [TransactionLG]}
 AdamAccount: Account = {"amount": 50, "iban": "Buranyah", "transactions": []}
 
+CurrentAccount: Account = LiamAccount
+
 accounts = [LiamAccount, GhaziAccount, AdamAccount]
 def get_amount(account):
     return account["amount"]
