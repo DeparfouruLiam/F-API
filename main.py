@@ -21,11 +21,18 @@ def account_from_username(username):
     return account_from_iban(account["iban"])
 
 @app.get("/transfer")
-def transfer_amount(sender,receiver,amount):
-    sender = account_from_iban(sender)
-    receiver = account_from_iban(receiver)
+def transfer_amount(senderiban,receiveriban,amount):
+    sender = account_from_iban(senderiban)
+    if sender is None:
+        return {"No account linked to the IBAN of the sender"}
+    receiver = account_from_iban(receiveriban)
+    if receiver is None:
+        return {"No account linked to the IBAN of the receiver"}
+    if int(amount) > sender["amount"]:
+        return {"Sender doesn't have enough to transfer the amount"}
     sender.update({"amount": get_amount(sender) - int(amount)})
     receiver.update({"amount": get_amount(receiver) + int(amount)})
+    return {"The transfer was successful. "+senderiban+" new amount": sender["amount"], receiveriban+" new amount": receiver["amount"]}
 
 @app.get("/read_amount")
 def read_amount(iban):
@@ -34,7 +41,7 @@ def read_amount(iban):
         return {"No account linked to this IBAN"}
     return {"Amount": user["amount"]}
 
-@app.get("/read_amount_dos")
+@app.get("/read_amount_username")
 def read_amount_dos(username):
     user = account_from_username(username)
     if user is None:
