@@ -1,6 +1,4 @@
-from typing import TypedDict
 from account import *
-from account import account_from_iban
 from beneficiary import *
 
 class User:

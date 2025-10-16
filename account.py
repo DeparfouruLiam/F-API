@@ -1,6 +1,5 @@
 from typing import TypedDict
 from transaction import *
-from user import *
 
 class Account:
     amount: int
