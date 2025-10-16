@@ -1,9 +1,14 @@
 from fastapi import APIRouter, HTTPException,Depends,status,Form
+from pydantic import BaseModel
+
 from user import *
 from auth import *
 from fastapi.security import OAuth2PasswordBearer
 from typing import List, Optional
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status
 
+bearer_scheme = HTTPBearer()
 router = APIRouter(prefix="/user", tags=["User"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="Login")
 
@@ -12,16 +17,32 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 secret_key = "very_secret_key"
 algorithm = "HS256"
+security = HTTPBearer()
 
-bearer_scheme = HTTPBearer()
+class CreateUser(BaseModel):
+    username: str
+    password: str
 
-def get_user(authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
-    return jwt.decode(authorization.credentials, secret_key, algorithms=[algorithm])
+def get_user(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+):
+    try:
+        payload = jwt.decode(credentials.credentials, secret_key, algorithms=[algorithm])
+        return payload  # You can also return a user object or dict here
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+def generate_token(user: CreateUser):
+    return jwt.encode(user.dict(), secret_key, algorithm=algorithm)
 
-def generate_token(user: User):
-    return jwt.encode(user.to_dict(), secret_key, algorithm=algorithm)
+@router.post("/login")
+def login(user: CreateUser):
+    return {"token": generate_token(user)}
 
-
+@router.get("/meme")
+def me(user=Depends(get_user)):
+    return user
 @router.get("/a", response_model=str)
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
