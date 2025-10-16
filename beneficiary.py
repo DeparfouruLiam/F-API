@@ -1,8 +1,12 @@
-from pydantic import BaseModel
+from typing import TypedDict
 
-class Beneficiary(BaseModel):
+class Beneficiary:
     username: str
     iban: str
 
+    def __init__(self, username: str, iban: str):
+        self.username = username
+        self.iban = iban
+
 #All beneficiaries
-ghazi_beneficiary = Beneficiary(username="Ghazi", iban="Yiouiuh")
+GhaziBeneficiary = Beneficiary( "Ghazi", "Yiouiuh")

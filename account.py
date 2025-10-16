@@ -1,43 +1,61 @@
+from typing import TypedDict
 from transaction import *
-from pydantic import BaseModel
-from datetime import datetime
-import config
-import transaction
+from user import *
 
-
-class Account(BaseModel):
+class Account:
     amount: int
     iban: str
     transactions: list[Transaction]
+    
+    def __init__(self, amount: int, iban: str,transaction: list[Transaction]) -> None:
+        self.amount = amount
+        self.iban = iban
+        self.transactions = transaction
 
+    def get_iban(self) -> str:
+        return self.iban
+
+    def get_amount(self) -> int:
+        return self.amount
+
+    def get_transactions(self) -> list[Transaction]:
+        return self.transactions
+
+    def add_amount(self, amount: int) -> None:
+        self.amount += int(amount)
+    def take_amount(self, amount: int) -> None:
+        self.amount -= int(amount)
 
 #All accounts
-liam_account = Account(amount= 100, iban="Aled", transactions= [transaction_lg])
-ghazi_account = Account(amount= 200, iban="Yiouiuh", transactions= [transaction_lg])
-adam_account = Account(amount= 50, iban="Buranyah", transactions= [])
+LiamAccount = Account (100, "Aled", [TransactionLG])
+GhaziAccount = Account (10, "Yiouiuh", [TransactionLG])
+AdamAccount = Account (50, "Buranyah", [])
 
-CurrentAccount: Account = liam_account
+CurrentAccount = Account (0,  "",  [])
 
-accounts = [liam_account, ghazi_account, adam_account]
+accounts = [LiamAccount, GhaziAccount, AdamAccount]
+
 def get_amount(account):
-    return account.amount 
+    return account.get_amount()
 
 def get_accounts():
     return accounts
 
+def get_current_account():
+    return CurrentAccount
+
+def add_account(iban: str):
+    new_account = Account(0, iban, [])
+    accounts.append(new_account)
+    return new_account
+
+def update_current_account(new_account):
+    global CurrentAccount
+    CurrentAccount = new_account
+    return CurrentAccount
+
 def account_from_iban(iban):
-    return next((x for x in get_accounts() if x.iban  == iban), None)
+    return next((x for x in get_accounts() if x.get_iban() == iban), None)
 
-def add_transaction(receiver:Account, amount):
-    tmpTransaction:Transaction = Transaction(ibanSender= CurrentAccount.iban , ibanReceiver= receiver.iban , amount= amount, date= datetime.now(UTC).isoformat(), cancelled=False,id=config.transactionCount)
-    CurrentAccount.transactions .append(tmpTransaction)
-    config.transactionCount+=1
-    receiver.transactions .append(tmpTransaction)
-    return
-
-def add_transaction_self(amount):
-    tmpTransaction:Transaction = Transaction(ibanSender= CurrentAccount.iban , ibanReceiver= CurrentAccount.iban , amount= amount, date= datetime.now(UTC).isoformat(), cancelled=False,id=config.transactionCount)
-    CurrentAccount.transactions .append(tmpTransaction)
-    config.transactionCount+=1
-
-    return
+def user_account_from_iban(iban,user_accounts):
+    return next((x for x in user_accounts if x.get_iban() == iban), None)

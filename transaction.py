@@ -1,17 +1,14 @@
-from datetime import datetime, timedelta, UTC, timezone
-import config
-from pydantic import BaseModel
+from typing import TypedDict
 
-transactions = []
-class Transaction(BaseModel):
-    ibanSender: str
-class Transaction(BaseModel):
+class Transaction:
     ibanSender: str
     ibanReceiver: str
     amount: int
-    date : datetime
-    cancelled: bool
-    id:int
+
+    def __init__(self, iban_sender: str, iban_receiver: str, amount: int) -> None:
+        self.ibanSender = iban_sender
+        self.ibanReceiver = iban_receiver
+        self.amount = amount
+
 #All transactions
-transaction_lg = Transaction(ibanSender="Aled", ibanReceiver="Yiouiuh", amount=20, date= datetime.now(timezone.utc), cancelled=False, id=config.transactionCount)
-config.transactionCount+=1
+TransactionLG= Transaction("Aled", "Yiouiuh", 20)
