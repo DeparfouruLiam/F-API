@@ -7,19 +7,6 @@ from account import *
 from config import transactionCount
 
 router = APIRouter(prefix="/transaction", tags=["Transaction"] )
-
-
-
-def transfer_amount_reverse(senderiban,receiveriban,amount):
-    sender = account_from_iban(senderiban)
-    receiver = account_from_iban(receiveriban)
-    if int(amount) > sender.amount :
-        return {"Sender doesn't have enough to transfer the amount"}
-    sender.amount-= int(amount)
-    receiver.amount+= int(amount)
-    return {"The transfer was successful. "+senderiban+" new amount": sender.amount , receiveriban+" new amount": receiver.amount }
-
-
 @router.get("/Addmoney")
 def add_money(amount):
     if CurrentAccount is None:
@@ -44,16 +31,23 @@ def show_transaction(id:int):
 @router.get("/cancelTransaction")
 def cancel_transaction():
     i:int  =0
+    a: int = 0
     for transaction in CurrentAccount.transactions :
         if transaction.ibanSender  == CurrentAccount.iban :
+            a+=1
             if transaction.ibanReceiver  != CurrentAccount.iban :
+                a += 1
+
                 if not transaction.cancelled:
-                    if datetime.now(timezone.utc) - transaction.date .replace(tzinfo=timezone.utc)+timedelta(seconds=7200) <= timedelta(seconds=10):
-                        transfer_amount_reverse(transaction.ibanReceiver ,transaction.ibanSender ,transaction.amount )
+                    a += 1
+
+                    if datetime.now(timezone.utc) - transaction.date.replace(tzinfo=timezone.utc) <= timedelta(seconds=10):
+                        a += 1
+
                         CurrentAccount.transactions[i].cancelled=True
-                        return transaction.ibanReceiver ,transaction.ibanSender ,transaction.amount ,datetime.now(timezone.utc) - transaction.date .replace(tzinfo=timezone.utc)+timedelta(seconds=7200)
+                        return transaction.ibanReceiver ,transaction.ibanSender ,transaction.amount ,datetime.now(timezone.utc) - transaction.date .replace(tzinfo=timezone.utc)
         i=i+1
-    return  "No valid transaction to cancel"
+    return  a,datetime.now(timezone.utc) , transaction.date.replace(tzinfo=timezone.utc)
 
 @router.get("/transfer")
 def transfer_amount(receiveriban,amount):

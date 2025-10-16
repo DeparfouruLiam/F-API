@@ -13,5 +13,5 @@ class Transaction(BaseModel):
     cancelled: bool
     id:int
 #All transactions
-transaction_lg = Transaction(ibanSender="Aled", ibanReceiver="Yiouiuh", amount=20, date= datetime.now(), cancelled=False, id=config.transactionCount)
+transaction_lg = Transaction(ibanSender="Aled", ibanReceiver="Yiouiuh", amount=20, date= datetime.now(timezone.utc), cancelled=False, id=config.transactionCount)
 config.transactionCount+=1
