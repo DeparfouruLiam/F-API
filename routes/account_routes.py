@@ -34,3 +34,29 @@ def create_new_account(iban):
 def get_my_account():
     current_account = get_current_account()
     return {"Amount": current_account.get_iban()}
+@router.delete("/delete_account")
+def delete_account(iban: str):
+    # Vérifie si l'utilisateur est connecté
+    user = get_current_user()
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not connected")
+
+    # Vérifie si le compte existe dans la liste globale
+    account = account_from_iban(iban)
+    if account is None:
+        raise HTTPException(status_code=404, detail="No account linked to this IBAN")
+
+    # Vérifie que le compte appartient bien à l'utilisateur
+    if account not in user.get_accounts():
+        raise HTTPException(status_code=403, detail="You do not own this account")
+
+    # Supprime le compte de la liste globale et du profil utilisateur
+    accounts.remove(account)
+    user.get_accounts().remove(account)
+
+    # Si c'était le compte courant, on le réinitialise
+    global CurrentAccount
+    if CurrentAccount.get_iban() == iban:
+        update_current_account(Account(0, "", []))
+
+    return {"message": f"Account {iban} successfully deleted"}
