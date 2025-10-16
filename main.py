@@ -1,6 +1,5 @@
 from typing import TypedDict
 from fastapi import FastAPI, Depends
-from user import *
 from routes import account_routes,user_routes,transaction_routes,beneficiary_routes
 app = FastAPI(title="Gooning Factory API")
 

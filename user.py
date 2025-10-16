@@ -1,42 +1,34 @@
 from typing import TypedDict
-from account import *
+from account import account_from_iban, Account, liam_account,ghazi_account,adam_account
 from beneficiary import *
+from pydantic import BaseModel
 
-class User(TypedDict):
+class User(BaseModel):
     username: str
     password: str
     accounts: list[Account]
     mainAccount: Account
     Beneficiaries: list[Beneficiary]
 
+    def getUsername(self) -> str:
+        return self.username
 #All users
-Liam: User = {"username": "Liam", "password": "furryfemboy", "accounts": [LiamAccount],"mainAccount":LiamAccount,"Beneficiaries": [GhaziBeneficiary]}
-Ghazi: User = {"username": "Ghazi", "password": "jadorelespieds", "accounts": [GhaziAccount],"mainAccount":GhaziAccount,"Beneficiaries": []}
-Adam: User = {"username": "Adam", "password":"futa", "accounts": [AdamAccount],"mainAccount": AdamAccount,"Beneficiaries": []}
+liam = User(username="Liam", password ="furryfemboy", accounts= [liam_account], mainAccount=liam_account, Beneficiaries= [ghazi_beneficiary])
+ghazi = User(username="Ghazi", password="jadorelespieds", accounts= [ghazi_account], mainAccount=ghazi_account, Beneficiaries= [])
+adam = User(username="Adam", password="futa", accounts= [adam_account], mainAccount= adam_account, Beneficiaries= [])
 
-CurrentUser: User = {"username": "Not connected", "password": "jspgros", "accounts": [],"mainAccount":None,"Beneficiaries": []}
+current_user = liam
 
-users = [Liam, Adam, Ghazi]
+
+users = [liam, adam, ghazi]
 
 def get_users():
     return users
 
-def get_current_user():
-    return CurrentUser
 
-def add_user(username: str, password: str, iban: str):
-    new_account = add_account(iban)
-    new_user: User = {"username": username, "password": password, "accounts": [new_account],"mainAccount":new_account,"Beneficiaries": []}
-    users.append(new_user)
-    return new_user
-
-def update_current_user(new_user):
-    CurrentUser.update(new_user)
-    return CurrentUser
-
-def user_from_username(username):
-    return next((x for x in get_users() if x["username"] == username), None)
 
 def account_from_username(username):
-    account = user_from_username(username)["mainAccount"]
-    return account_from_iban(account["iban"])
+    user = next((x for x in get_users() if x.getUsername() == username), None)
+    if not user:
+        return None
+    return account_from_iban(user.mainAccount.iban)
