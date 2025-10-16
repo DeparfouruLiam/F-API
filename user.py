@@ -1,56 +1,51 @@
+from sqlmodel import Field, SQLModel
 from account import *
 from beneficiary import *
 
-class User:
-    username: str
-    password: str
-    accounts: list[Account]
-    mainAccount: Account
-    Beneficiaries: list[Beneficiary]
-
-    def __init__(self, username: str, password: str, accounts_list: list[Account], mainAccount: Account, Beneficiaries: list[Beneficiary]):
-        self.username = username
-        self.password = password
-        self.accounts = accounts_list
-        self.mainAccount = mainAccount
-        self.Beneficiaries = Beneficiaries
-
-    def get_username(self):
-        return self.username
-
-    def get_password(self):
-        return self.password
-
-    def get_accounts(self):
-        return self.accounts
-
-    def get_main_account(self):
-        return self.mainAccount
-
-    def get_beneficiaries(self):
-        return self.Beneficiaries
-
+class User(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    username: str = Field(index=True)
+    password: str = Field(index=True)
 
 #All users
-Liam = User("Liam", "furryfemboy", [LiamAccount],LiamAccount,[GhaziBeneficiary])
-Ghazi = User("Ghazi", "jadorelespieds", [GhaziAccount],GhaziAccount,[])
-Adam = User("Adam", "futa", [AdamAccount], AdamAccount,[])
+# Liam = User("Liam", "furryfemboy", [LiamAccount],LiamAccount,[GhaziBeneficiary])
+# Ghazi = User("Ghazi", "jadorelespieds", [GhaziAccount],GhaziAccount,[])
+# Adam = User("Adam", "futa", [AdamAccount], AdamAccount,[])
 
-CurrentUser = Liam
+CurrentUserId = 0
+CurrentUserName = ""
 
-users = [Liam, Adam, Ghazi]
+def update_current_id(new_id):
+    global CurrentUserId
+    CurrentUserId = new_id
 
-def get_users():
-    return users
+def update_current_name(new_name):
+    global CurrentUserName
+    CurrentUserName = new_name
+
+def getCurrentUserId():
+    global CurrentUserId
+    return CurrentUserId
+
+def getCurrentUserName():
+    global CurrentUserName
+    return CurrentUserName
+
+CurrentUser = 0
+#
+# users = [Liam, Adam, Ghazi]
+
+# def get_users():
+#     return users
 
 def get_current_user():
     return CurrentUser
 
-def add_user(username: str, password: str, iban: str):
-    new_account = add_account(iban)
-    new_user = User(username, password, [new_account],new_account,[])
-    users.append(new_user)
-    return new_user
+# def add_user(username: str, password: str, iban: str):
+#     new_account = add_account(iban)
+#     new_user = User(username, password, [new_account],new_account,[])
+#     users.append(new_user)
+#     return new_user
 
 def update_current_user(new_user):
     global CurrentUser
