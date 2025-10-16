@@ -1,6 +1,8 @@
 from transaction import *
 from pydantic import BaseModel
 from datetime import datetime
+import config
+import transaction
 
 
 class Account(BaseModel):
@@ -27,12 +29,15 @@ def account_from_iban(iban):
     return next((x for x in get_accounts() if x.iban  == iban), None)
 
 def add_transaction(receiver:Account, amount):
-    tmpTransaction:Transaction = Transaction(ibanSender= CurrentAccount.iban , ibanReceiver= receiver.iban , amount= amount, date= datetime.now(UTC).isoformat(), cancelled=False)
+    tmpTransaction:Transaction = Transaction(ibanSender= CurrentAccount.iban , ibanReceiver= receiver.iban , amount= amount, date= datetime.now(UTC).isoformat(), cancelled=False,id=config.transactionCount)
     CurrentAccount.transactions .append(tmpTransaction)
+    config.transactionCount+=1
     receiver.transactions .append(tmpTransaction)
     return
 
 def add_transaction_self(amount):
-    tmpTransaction:Transaction = Transaction(ibanSender= CurrentAccount.iban , ibanReceiver= CurrentAccount.iban , amount= amount, date= datetime.now(UTC).isoformat(), cancelled=False)
+    tmpTransaction:Transaction = Transaction(ibanSender= CurrentAccount.iban , ibanReceiver= CurrentAccount.iban , amount= amount, date= datetime.now(UTC).isoformat(), cancelled=False,id=config.transactionCount)
     CurrentAccount.transactions .append(tmpTransaction)
+    config.transactionCount+=1
+
     return
