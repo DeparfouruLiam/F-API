@@ -63,3 +63,18 @@ def cancel_transaction():
 def show_transaction():
     current_account = get_current_account()
     return {"transactions": current_account.get_transactions()}
+
+
+@router.get("/Addmoney")
+def add_money(amount: int):
+    current_account = get_current_account()
+    if current_account is None:
+        raise HTTPException(status_code=400, detail="No account found")
+
+    if amount < 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive")
+
+    current_account.add_amount(amount)
+    add_transaction_self(amount)
+
+    return {"new_balance": current_account.get_amount()}

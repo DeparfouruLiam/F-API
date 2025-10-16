@@ -58,3 +58,16 @@ def account_from_iban(iban):
 
 def user_account_from_iban(iban,user_accounts):
     return next((x for x in user_accounts if x.get_iban() == iban), None)
+
+def add_transaction(receiver:Account, amount):
+    tmpTransaction = Transaction(get_current_account().iban, receiver.iban, amount)
+    CurrentAccount.transactions .append(tmpTransaction)
+    config.transactionCount+=1
+    receiver.transactions .append(tmpTransaction)
+    return
+
+def add_transaction_self(amount):
+    tmpTransaction = Transaction(get_current_account().iban,get_current_account().iban, amount)
+    CurrentAccount.transactions .append(tmpTransaction)
+    config.transactionCount+=1
+    return tmpTransaction
