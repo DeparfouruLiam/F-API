@@ -5,13 +5,16 @@ import asyncio
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
+from jose import JWTError, jwt
 
 app = FastAPI(title="Gooning Factory API")
 
 
-SECRET_KEY = "Damn"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+
+
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
@@ -24,10 +27,6 @@ async def periodic_task():
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(periodic_task())
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
 
 
 app.include_router(account_routes.router)

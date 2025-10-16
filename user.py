@@ -38,6 +38,10 @@ class User:
     def add_beneficiaries(self,bene: Beneficiary):
         self.Beneficiaries.append(bene)
 
+    def to_dict(self):
+        return {
+            "username": self.username,
+        }
 
 #All users
 def hash_password(password):
