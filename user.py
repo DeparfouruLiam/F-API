@@ -52,9 +52,9 @@ def update_current_user(new_user):
     CurrentUser = new_user
     return CurrentUser
 
-def user_from_username(username):
-    return next((x for x in get_users() if x.get_username() == username), None)
-
-def account_from_username(username):
-    account = user_from_username(username).get_main_account()
-    return account_from_iban(account.get_iban())
+# def user_from_username(username):
+#     return next((x for x in get_users() if x.get_username() == username), None)
+#
+# def account_from_username(username):
+#     account = user_from_username(username).get_main_account()
+#     return account_from_iban(account.get_iban())

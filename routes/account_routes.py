@@ -1,34 +1,41 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from account import *
-from user import CurrentUser, get_current_user
+from database import get_session
+from user import CurrentUser, get_current_user, getCurrentUserId
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
-@router.get("/read_amount")
-def read_amount():
-    user = get_iban()
-    if user is None:
+class CreateAccount(BaseModel):
+    iban: str
+
+@router.get("/current_account_amount")
+def read_amount(session = Depends(get_session)):
+    account = get_iban()
+    if account is "":
         return {"No account linked to this IBAN"}
-    return {"Amount": user.get_amount()}
+    amount = session.query(Account).filter_by(user_id=getCurrentUserId()).first()
+    return {"Amount": amount.amount}
 
 @router.get("/choose_current_account")
-def choose_current_account(iban):
-    if CurrentUser is None:
+def choose_current_account(iban, session=Depends(get_session)):
+    if getCurrentUserId() is 0:
         return {"Not connected"}
-    account = user_account_from_iban(iban,get_current_user().get_accounts())
-    if account is None:
+    new_account = session.query(Account).filter_by(iban=iban).first()
+    if new_account is None:
         return {"No account linked to this IBAN in your accounts"}
-    update_current_account(account)
-    return {"Current account successfully updated to": account}
+    update_account_id(new_account.id)
+    return {"Current account successfully updated to": new_account.iban}
 
-# @router.get("/create_new_account")
-# def create_new_account(iban):
-#     if iban in [x.get_iban() for x in accounts]:
-#         return {"Iban already in use"}
-#     new_account = add_account(iban)
-#     user = get_current_user()
-#     user.get_accounts().append(new_account)
-#     return {"New account successfully created to": new_account}
+@router.post("/create_account", response_model=CreateAccount)
+def create_account(body: CreateAccount, session = Depends(get_session)) -> Account:
+    if getCurrentUserId() == 0:
+        raise HTTPException(status_code=404, detail="User not connected")
+    account = Account(amount=100, iban=body.iban, user_id=getCurrentUserId())
+    session.add(account)
+    session.commit()
+    session.refresh(account)
+    return account
 
 @router.get("/current_account")
 def get_my_account():

@@ -1,50 +1,64 @@
 from datetime import  timedelta, timezone, datetime
 from threading import Thread
 import time
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+
 from account import *
+from database import get_session
 from user import *
 import config
 
 router = APIRouter(prefix="/transaction", tags=["Transaction"])
 
+class CreateTransaction(BaseModel):
+    receiver_iban: str
+    amount: int
+
 @router.post("/transfer")
-def transfer_amount(receiveriban,amount):
-    sender = get_current_account()
-    if sender.get_iban() is None:
-        return {"No account linked to the IBAN of the sender"}
-    receiver = account_from_iban(receiveriban)
+def transfer_amount(body: CreateTransaction, session = Depends(get_session)):
+    if get_iban() is "":
+        return {"Not connected to an account"}
+    receiver = session.query(Account).filter_by(iban=body.receiver_iban).first()
     if receiver is None:
         return {"No account linked to the IBAN of the receiver"}
-    if sender is receiver:
+    if get_iban() is receiver.iban:
         return {"Transfer must be from one account to another"}
-    if int(amount) > sender.get_amount():
+    if body.amount > get_amount():
         return {"Sender doesn't have enough to transfer the amount"}
-    current_transaction = Transaction(sender.get_iban(), receiveriban, amount)
+    current_transaction = {"sender_iban":get_iban(),"receiver_iban": receiver.iban,"amount": body.amount}
 
     config.transactionCount+=1
-    create_thread(current_transaction)
+    create_thread(current_transaction, session)
 
-    return {"The transfer was successful. "+sender.get_iban()+" new amount": sender.get_amount(), receiveriban+" new amount": receiver.get_amount()}
+    return {"The transfer was successful. "+get_iban()+" new amount": get_amount(), receiver.iban+" new amount": receiver.amount}
 
-def create_thread(trs: Transaction):
-    thread = Thread(target=check_flag_later, args=(trs.id,))
-    account_from_iban(trs.ibanSender).transactions.append(trs)
-    account_from_iban(trs.ibanReceiver).transactions.append(trs)
+def create_thread(trs: dict, session = Depends(get_session)):
+    transaction = Transaction(ibanSender=trs.get("sender_iban"),ibanReceiver=trs.get("receiver_iban"), amount=trs.get("amount"))
+    session.add(transaction)
+    session.commit()
+    session.refresh(transaction)
+    thread = Thread(target=check_flag_later, args=(transaction.id, session))
     thread.start()
     return {"message": "Object created and background check started."}
 
 
-def check_flag_later(id:int  ):
+def check_flag_later(id_transaction:int , session = Depends(get_session)):
     time.sleep(5)
-    for trs in get_current_account().get_transactions():
-        if trs.id == id:
-            if not trs.cancelled :
-                account_from_iban(trs.ibanSender).take_amount( int(trs.amount) )
-                account_from_iban(trs.ibanReceiver).add_amount( int(trs.amount ))
-                print("Flag is still False after 5 seconds!")
-            else:
-                print("Flag was set to True before 5 seconds.")
+    print(id_transaction)
+    transaction = session.query(Transaction).filter_by(id=id_transaction).first()
+    # for trs in get_current_account().get_transactions():
+    #     if trs.id == id:
+    if not transaction.cancelled :
+        session.query(Account).filter_by(iban=transaction.ibanSender).first().amount -= transaction.amount
+        session.query(Account).filter_by(iban=transaction.ibanReceiver).first().amount += transaction.amount
+        session.commit()
+        session.refresh(transaction)
+        # account_from_iban(trs.ibanSender).take_amount( int(trs.amount) )
+        # account_from_iban(trs.ibanReceiver).add_amount( int(trs.amount ))
+        print("Flag is still False after 5 seconds!")
+    else:
+        print("Flag was set to True before 5 seconds.")
 
 @router.get("/cancelTransaction")
 def cancel_transaction():

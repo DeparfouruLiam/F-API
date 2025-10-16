@@ -15,15 +15,20 @@ class CreateAccount(BaseModel):
     iban: str
 
 @router.post("/register")
-def register_user(body: CreateUser,body_account:CreateAccount, session = Depends(get_session)) -> User:
-    account = Account(amount=100, iban=body_account.iban, user_id=getCurrentUserId(),is_main=True)
+def register_user(body: CreateUser,body_account:CreateAccount, session = Depends(get_session)) -> str:
+    user = session.query(User).filter_by(username=body.username).first()
+    if user:
+        raise HTTPException(status_code=404, detail="Username already used")
     user = User(username=body.username, password=body.password)
     session.add(user)
-    session.add(account)
     session.commit()
     session.refresh(user)
+    account = Account(amount=100, iban=body_account.iban, user_id=user.id, is_main=True)
+    session.add(account)
+    session.commit()
     session.refresh(account)
-    return user
+    login(CreateUser(username=body.username, password=body.password),session)
+    return "Account created"
 
 @router.post("/login")
 def login(body: CreateUser, session = Depends(get_session)) -> User:
@@ -32,7 +37,7 @@ def login(body: CreateUser, session = Depends(get_session)) -> User:
         raise HTTPException(status_code=404, detail="User not found")
     if user.password != body.password:
         raise HTTPException(status_code=401, detail="Incorrect password")
-    main_account = session.query(Account).filter_by(user_id=getCurrentUserId(),is_main=True).first()
+    main_account = session.query(Account).filter_by(user_id=user.id,is_main=True).first()
 
     update_iban(main_account.iban)
     update_account_id(main_account.id)
@@ -46,9 +51,10 @@ def login(body: CreateUser, session = Depends(get_session)) -> User:
 def get_my_user():
     return {"ID": getCurrentUserId(),"username": getCurrentUserName()}
 
-# @router.get("/get_all_accounts")
-# def get_all_accounts():
-#     ibans = ""
-#     for x in get_current_user().get_accounts():
-#         ibans += x.get_iban()+" : "+str(x.get_amount())+" zennys ; "
-#     return {"All your accounts are": ibans}
+@router.get("/get_all_accounts")
+def get_all_accounts(session = Depends(get_session)):
+    ibans = ""
+    all_accounts = session.query(Account).filter_by(user_id=getCurrentUserId()).all()
+    for x in all_accounts:
+        ibans += x.iban+" : "+str(x.amount)+" zennys ; "
+    return {"All your accounts are": ibans}
