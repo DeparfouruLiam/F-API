@@ -36,7 +36,7 @@ Liam = User("Liam", "furryfemboy", [LiamAccount],LiamAccount,[GhaziBeneficiary])
 Ghazi = User("Ghazi", "jadorelespieds", [GhaziAccount],GhaziAccount,[])
 Adam = User("Adam", "futa", [AdamAccount], AdamAccount,[])
 
-CurrentUser = User
+CurrentUser = Liam
 
 users = [Liam, Adam, Ghazi]
 

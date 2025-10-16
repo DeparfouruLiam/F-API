@@ -9,11 +9,13 @@ def read_amount(iban):
     user = account_from_iban(iban)
     if user is None:
         return {"No account linked to this IBAN"}
-    return {"Amount": user["amount"]}
+    return {"Amount": user.get_amount()}
 
 @router.get("/choose_current_account")
 def choose_current_account(iban):
-    account = user_account_from_iban(iban,CurrentUser["accounts"])
+    if CurrentUser is None:
+        return {"Not connected"}
+    account = user_account_from_iban(iban,get_current_user().get_accounts())
     if account is None:
         return {"No account linked to this IBAN in your accounts"}
     update_current_account(account)
