@@ -53,7 +53,6 @@ def delete_account(iban: str):
     # Supprime le compte de la liste globale et du profil utilisateur
     accounts.remove(account)
     user.get_accounts().remove(account)
-
     # Si c'était le compte courant, on le réinitialise
     global CurrentAccount
     if CurrentAccount.get_iban() == iban:
