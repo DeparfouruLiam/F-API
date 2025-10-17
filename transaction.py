@@ -1,9 +1,9 @@
 from sqlmodel import Field, SQLModel
-import datetime
 from typing import TypedDict
-from datetime import datetime, timedelta, UTC, timezone
-
+from datetime import *
 import config
+
+created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), index=True)
 
 
 # class Transaction:

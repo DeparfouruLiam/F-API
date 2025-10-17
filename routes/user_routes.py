@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from account import *
+from beneficiary import Beneficiary
 from database import get_session
 from user import *
 from newclass import *
@@ -62,7 +63,18 @@ def register_user(body: CreateUser,body_account:CreateAccount, session = Depends
     login(CreateUser(username=body.username, password=body.password),session)
     return "Account created"
 @router.post("/login")
-def login(user: CreateUser):
+def login(user: CreateUser, session = Depends(get_session)):
+    current_user = session.query(User).filter_by(username=user.username).first()
+    if not current_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if current_user.password != user.password:
+        raise HTTPException(status_code=401, detail="Incorrect password")
+    main_account = session.query(Account).filter_by(user_id=current_user.id, is_main=True).first()
+
+    update_iban(main_account.iban)
+    update_account_id(main_account.id)
+    update_amount(main_account.amount)
+
     return {"token": generate_token(user)}
 
 @router.get("/meme")
@@ -80,20 +92,47 @@ def get_all_accounts(session = Depends(get_session)):
         ibans += x.iban+" : "+str(x.amount)+" zennys ; "
     return {"All your accounts are": ibans}
 
-@router.post("/addBeneficiary")
-def add_Beneficiary(name: str, iban: str):
-    if not account_from_iban(iban) is None: #chercher avec bdd
-        for bene in get_current_user().get_beneficiaries():
-            if bene.get_iban() == iban:
-                return "Beneficiary already exists"
-        beneficiary = Beneficiary(iban, name)
-        get_current_user().add_beneficiaries(beneficiary)
-        return "beneficiary added successfully",get_current_user().get_beneficiaries(),iban
-    else:
-        return "beneficiary could not be added"
+class CreateBeneficiary(BaseModel):
+    username: str
+    iban: str
+
+@router.post("/add_beneficiary", response_model=CreateBeneficiary)
+def add_Beneficiary(body: CreateBeneficiary, session = Depends(get_session)) -> Beneficiary | None:
+    if not session.query(Account).filter_by(iban=body.iban).first() is None: #chercher avec bdd
+        #for bene in get_current_user().get_beneficiaries():
+            #if bene.get_iban() == iban:
+                #return "Beneficiary already exists"
+
+        beneficiary = Beneficiary(username=body.username, iban=body.iban, user_id=getCurrentUserId())
+        session.add(beneficiary)
+        session.commit()
+        session.refresh(beneficiary)
+
+        #beneficiary = Beneficiary(iban, name)
+        #get_current_user().add_beneficiaries(beneficiary)
+        return  beneficiary
+    return None
+
+
+@router.post("/create_account", response_model=CreateAccount)
+def create_account(body: CreateAccount, session = Depends(get_session)) -> Account:
+    if getCurrentUserId() == 0:
+        raise HTTPException(status_code=404, detail="User not connected")
+    account = Account(amount=100, iban=body.iban, user_id=getCurrentUserId())
+    session.add(account)
+    session.commit()
+    session.refresh(account)
+    return account
+
 
 @router.get("/showBeneficiary")
-def show_Beneficiary():
-    return get_current_user().get_beneficiaries()
+def show_Beneficiary(session = Depends(get_session), response_model=CreateAccount):
+    #return get_current_user().get_beneficiaries()
+    beneficiaries = ""
+    all_beneficiaries = session.query(Beneficiary).filter_by(user_id=getCurrentUserId()).all()
+    for x in all_beneficiaries:
+        #user_name = session.query(User).filter_by(id=x.user_id).first().username
+        beneficiaries += x.iban + ", id : " + str(x.id) + ", " + "User : " + x.username + "; "+"Datetime "+ str(x.created_at)
+    return {"All your accounts are": beneficiaries}
 
 
