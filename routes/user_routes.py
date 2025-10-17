@@ -30,6 +30,8 @@ security = HTTPBearer()
 class CreateUser(BaseModel):
     username: str
     password: str
+
+
 class CreateAccount(BaseModel):
     iban: str
 
