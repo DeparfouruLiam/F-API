@@ -4,15 +4,47 @@ from account import *
 from database import get_session
 from user import *
 from newclass import *
+from fastapi import APIRouter, HTTPException,Depends,status,Form
+from pydantic import BaseModel
 
+from user import *
+from auth import *
+from fastapi.security import OAuth2PasswordBearer
+from typing import List, Optional
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status
+
+
+bearer_scheme = HTTPBearer()
 router = APIRouter(prefix="/user", tags=["User"])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="Login")
+
+import jwt
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+secret_key = "very_secret_key"
+algorithm = "HS256"
+security = HTTPBearer()
 
 class CreateUser(BaseModel):
     username: str
     password: str
-
 class CreateAccount(BaseModel):
     iban: str
+
+def get_user(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+):
+    try:
+        payload = jwt.decode(credentials.credentials, secret_key, algorithms=[algorithm])
+        return payload  # You can also return a user object or dict here
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+def generate_token(user: CreateUser):
+    return jwt.encode(user.dict(), secret_key, algorithm=algorithm)
+
 
 @router.post("/register")
 def register_user(body: CreateUser,body_account:CreateAccount, session = Depends(get_session)) -> str:
@@ -29,24 +61,13 @@ def register_user(body: CreateUser,body_account:CreateAccount, session = Depends
     session.refresh(account)
     login(CreateUser(username=body.username, password=body.password),session)
     return "Account created"
-
 @router.post("/login")
-def login(body: CreateUser, session = Depends(get_session)) -> User:
-    user = session.query(User).filter_by(username=body.username).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user.password != body.password:
-        raise HTTPException(status_code=401, detail="Incorrect password")
-    main_account = session.query(Account).filter_by(user_id=user.id,is_main=True).first()
+def login(user: CreateUser):
+    return {"token": generate_token(user)}
 
-    update_iban(main_account.iban)
-    update_account_id(main_account.id)
-    update_amount(main_account.amount)
-
-    update_current_id(user.id)
-    update_current_name(user.username)
+@router.get("/meme")
+def me(user=Depends(get_user)):
     return user
-
 @router.get("/current_user")
 def get_my_user():
     return {"ID": getCurrentUserId(),"username": getCurrentUserName()}
@@ -58,3 +79,21 @@ def get_all_accounts(session = Depends(get_session)):
     for x in all_accounts:
         ibans += x.iban+" : "+str(x.amount)+" zennys ; "
     return {"All your accounts are": ibans}
+
+@router.post("/addBeneficiary")
+def add_Beneficiary(name: str, iban: str):
+    if not account_from_iban(iban) is None: #chercher avec bdd
+        for bene in get_current_user().get_beneficiaries():
+            if bene.get_iban() == iban:
+                return "Beneficiary already exists"
+        beneficiary = Beneficiary(iban, name)
+        get_current_user().add_beneficiaries(beneficiary)
+        return "beneficiary added successfully",get_current_user().get_beneficiaries(),iban
+    else:
+        return "beneficiary could not be added"
+
+@router.get("/showBeneficiary")
+def show_Beneficiary():
+    return get_current_user().get_beneficiaries()
+
+
